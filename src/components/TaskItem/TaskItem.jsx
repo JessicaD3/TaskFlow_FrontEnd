@@ -1,6 +1,8 @@
 import React from 'react';
 import styles from './TaskItem.module.css';
 
+const PRIORITY_LABELS = { low: 'Basse', medium: 'Moyenne', high: 'Haute' };
+
 const TaskItem = React.memo(function TaskItem({ task, onDelete, onToggle, onEdit }) {
   const cardClass = task.completed ? `${styles.card} ${styles.completed}` : styles.card;
 
@@ -10,7 +12,7 @@ const TaskItem = React.memo(function TaskItem({ task, onDelete, onToggle, onEdit
         <h3>{task.title}</h3>
         <p>{task.description || 'Aucune description'}</p>
         <span className={`${styles.badge} ${styles[task.priority]}`}>
-          Priorité: {task.priority}
+          Priorité: {PRIORITY_LABELS[task.priority]}
         </span>
       </div>
 
