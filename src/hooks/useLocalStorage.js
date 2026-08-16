@@ -6,7 +6,7 @@ function useLocalStorage(key, initialValue) {
     try {
       const stored = window.localStorage.getItem(key);
       return stored ? JSON.parse(stored) : initialValue;
-    } catch (err) {
+    } catch {
       return initialValue;
     }
   });
