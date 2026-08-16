@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import TaskForm from './components/TaskForm/TaskForm';
 import TaskList from './components/TaskList/TaskList';
 import FilterBar from './components/FilterBar/FilterBar';
@@ -30,13 +30,13 @@ function App() {
   const debouncedSearch = useDebounce(searchTerm, 500);
   const { data: rawTasks, loading, error } = useFetch(API_URL);
   const [tasks, setTasks] = useState([]);
+  const [lastRawTasks, setLastRawTasks] = useState(null);
 
-  // normalise les donnees de l'api une seule fois lors du chargement initial
-  useEffect(() => {
-    if (rawTasks) {
-      setTasks(normalizeTasks(rawTasks));
-    }
-    }, [rawTasks]);
+  // normalise les donnees de l'api
+  if (rawTasks && rawTasks !== lastRawTasks) {
+    setLastRawTasks(rawTasks);
+    setTasks(normalizeTasks(rawTasks));
+  }
 
   const { addTask, editTask, removeTask, toggleTask, actionLoading, actionError } =
     useTaskOperations(setTasks);
