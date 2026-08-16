@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { createTask, deleteTask, updateTask } from '../utils/api';
 
 // au de la 200 tâche, c'est une tâche locale
@@ -10,7 +10,7 @@ function useTaskOperations(setTasks) {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState(null);
 
-  async function addTask(taskData) {
+  const addTask = useCallback(async (taskData) => {
     try {
       setActionLoading(true);
       setActionError(null);
@@ -21,9 +21,9 @@ function useTaskOperations(setTasks) {
     } finally {
       setActionLoading(false);
     }
-  }
+  }, [setTasks]);
 
-  async function editTask(id, updatedData) {
+  const editTask = useCallback(async (id, updatedData) => {
     try {
       setActionLoading(true);
       setActionError(null);
@@ -41,9 +41,9 @@ function useTaskOperations(setTasks) {
     } finally {
       setActionLoading(false);
     }
-  }
+  }, [setTasks]);
 
-  async function removeTask(id) {
+  const removeTask = useCallback(async (id) => {
     try {
       setActionLoading(true);
       setActionError(null);
@@ -61,15 +61,15 @@ function useTaskOperations(setTasks) {
     } finally {
       setActionLoading(false);
     }
-  }
+  }, [setTasks]);
 
-  async function toggleTask(task) {
+  const toggleTask = useCallback(async (task) => {
     try {
       setActionLoading(true);
       setActionError(null);
       const newCompleted = !task.completed;
 
-      // tache locale: pas d'appel api, on met juste a jour le state
+      // tache locale: pas d'appel api juste la mise à jour de l'état
       if (!isRealTask(task.id)) {
         setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, completed: newCompleted } : t)));
         return;
@@ -82,7 +82,7 @@ function useTaskOperations(setTasks) {
     } finally {
       setActionLoading(false);
     }
-  }
+  }, [setTasks]);
 
   return { actionLoading, actionError, addTask, editTask, removeTask, toggleTask };
 }
