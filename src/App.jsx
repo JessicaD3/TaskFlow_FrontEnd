@@ -79,6 +79,7 @@ function App() {
       <main className="layout">
         <section className="left-column">
           <TaskForm
+            key={editingTask ? editingTask.id : 'new'}
             onSubmit={handleSubmitTask}
             editingTask={editingTask}
             onCancelEdit={handleCancelEdit}
