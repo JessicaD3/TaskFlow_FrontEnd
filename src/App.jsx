@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import TaskForm from './components/TaskForm/TaskForm';
 import TaskList from './components/TaskList/TaskList';
 import FilterBar from './components/FilterBar/FilterBar';
@@ -29,10 +29,15 @@ function App() {
   const [editingTask, setEditingTask] = useState(null);
 
   const debouncedSearch = useDebounce(searchTerm, 500);
-  const { data: rawTasks, loading, error, setData: setTasks } = useFetch(API_URL);
+  const { data: rawTasks, loading, error } = useFetch(API_URL);
+  const [tasks, setTasks] = useState([]);
 
-  // les taches brutes de l'api sont normalisees avant utilisation
-  const tasks = useMemo(() => (rawTasks ? normalizeTasks(rawTasks) : []), [rawTasks]);
+  // normalise les donnees de l'api une seule fois, au chargement initial
+  useEffect(() => {
+    if (rawTasks) {
+      setTasks(normalizeTasks(rawTasks));
+    }
+  }, [rawTasks]);
 
   const { addTask, editTask, removeTask, toggleTask, actionLoading, actionError } =
     useTaskOperations(setTasks);
