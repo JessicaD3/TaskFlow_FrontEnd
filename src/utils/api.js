@@ -1,6 +1,6 @@
 const BASE_URL = 'https://jsonplaceholder.typicode.com/todos';
 
-// verifie que la reponse est ok, sinon on jette une erreur
+// verifie que la reponse est ok
 async function checkResponse(response) {
   if (!response.ok) throw new Error(`Erreur ${response.status}`);
   return response.json();
@@ -10,7 +10,6 @@ export async function fetchTasks() {
   try {
     const response = await fetch(BASE_URL);
     const data = await checkResponse(response);
-    // on garde 12 taches et on ajoute les champs manquants
     return data.slice(0, 12).map((item) => ({
       id: item.id,
       title: item.title,
@@ -69,7 +68,7 @@ export async function updateTask(id, taskData) {
 
 export async function deleteTask(id) {
   try {
-    // le DELETE renvoie 204 sans contenu, pas de .json() ici
+    // le DELETE renvoie 204 sans contenu
     const response = await fetch(`${BASE_URL}/${id}`, { method: 'DELETE' });
     if (!response.ok) throw new Error(`Erreur ${response.status}`);
     return id;

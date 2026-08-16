@@ -17,7 +17,6 @@ function TaskForm({ onSubmit, editingTask, onCancelEdit }) {
   const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
 
-  // quand on passe en mode edition on pre-remplit le formulaire
   useEffect(() => {
     if (editingTask) {
       setFormData({

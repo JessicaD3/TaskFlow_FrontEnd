@@ -12,7 +12,6 @@ import { filterTasks, getFilterCounts, getTaskStats } from './utils/helpers';
 
 const API_URL = 'https://jsonplaceholder.typicode.com/todos';
 
-// transforme les donnees brutes de l'api au format attendu par l'app
 function normalizeTasks(rawTasks) {
   return rawTasks.slice(0, 12).map((item) => ({
     id: item.id,
@@ -32,12 +31,12 @@ function App() {
   const { data: rawTasks, loading, error } = useFetch(API_URL);
   const [tasks, setTasks] = useState([]);
 
-  // normalise les donnees de l'api une seule fois, au chargement initial
+  // normalise les donnees de l'api une seule fois lors du chargement initial
   useEffect(() => {
     if (rawTasks) {
       setTasks(normalizeTasks(rawTasks));
     }
-  }, [rawTasks]);
+    }, [rawTasks]);
 
   const { addTask, editTask, removeTask, toggleTask, actionLoading, actionError } =
     useTaskOperations(setTasks);

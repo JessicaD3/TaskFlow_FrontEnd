@@ -10,7 +10,7 @@ export function ThemeProvider({ children }) {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   }
 
-  // applique le theme sur le body pour que le css puisse le cibler
+  // applique le theme sur le body 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
   }, [theme]);

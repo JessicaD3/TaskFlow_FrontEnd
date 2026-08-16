@@ -51,7 +51,6 @@ function useTaskOperations(setTasks) {
     try {
       setActionLoading(true);
       setActionError(null);
-      // on inverse juste le champ completed, le reste ne change pas
       const updated = await updateTask(task.id, { ...task, completed: !task.completed });
       setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)));
     } catch (err) {
