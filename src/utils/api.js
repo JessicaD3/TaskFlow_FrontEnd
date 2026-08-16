@@ -31,6 +31,8 @@ export async function fetchTaskById(id) {
   }
 }
 
+let localIdCounter = 0;
+
 export async function createTask(taskData) {
   try {
     const response = await fetch(BASE_URL, {
@@ -38,10 +40,10 @@ export async function createTask(taskData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(taskData),
     });
-    const created = await checkResponse(response);
-    // l'api ne persiste pas vraiment donc on reconstruit la tache
+    await checkResponse(response);
+    localIdCounter += 1;
     return {
-      id: created.id || Date.now(),
+      id: 1000 + localIdCounter,
       title: taskData.title,
       description: taskData.description || '',
       priority: taskData.priority || 'medium',
