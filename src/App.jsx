@@ -6,15 +6,17 @@ import SearchBar from './components/SearchBar/SearchBar';
 import ThemeToggle from './components/ThemeToggle/ThemeToggle';
 import Stats from './components/Stats/Stats';
 import Notification from './components/Notification/Notification';
+import Pagination from './components/Pagination/Pagination';
 import useDebounce from './hooks/useDebounce';
 import useFetch from './hooks/useFetch';
 import useTaskOperations from './hooks/useTaskOperations';
 import { filterTasks, getFilterCounts, getTaskStats } from './utils/helpers';
 
-const API_URL = 'https://jsonplaceholder.typicode.com/todos';
+const BASE_URL = 'https://jsonplaceholder.typicode.com/todos';
+const ITEMS_PER_PAGE = 3;
 
 function normalizeTasks(rawTasks) {
-  return rawTasks.slice(0, 12).map((item) => ({
+  return rawTasks.map((item) => ({
     id: item.id,
     title: item.title,
     description: '',
@@ -27,13 +29,17 @@ function App() {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingTask, setEditingTask] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const debouncedSearch = useDebounce(searchTerm, 500);
-  const { data: rawTasks, loading, error } = useFetch(API_URL);
+
+  const apiUrl = `${BASE_URL}?_page=${currentPage}&_limit=${ITEMS_PER_PAGE}`;
+  const { data: rawTasks, loading, error, totalCount } = useFetch(apiUrl);
+
   const [tasks, setTasks] = useState([]);
   const [lastRawTasks, setLastRawTasks] = useState(null);
 
-  // normalise les donnees de l'api
+  // normalise les donnees de l'api a chaque changement de page
   if (rawTasks && rawTasks !== lastRawTasks) {
     setLastRawTasks(rawTasks);
     setTasks(normalizeTasks(rawTasks));
@@ -41,6 +47,8 @@ function App() {
 
   const { addTask, editTask, removeTask, toggleTask, actionLoading, actionError } =
     useTaskOperations(setTasks);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
   const filteredTasks = useMemo(
     () => filterTasks(tasks, filter, debouncedSearch),
@@ -62,6 +70,10 @@ function App() {
   );
 
   const handleCancelEdit = useCallback(() => setEditingTask(null), []);
+
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+  }, []);
 
   return (
     <div className="app-shell">
@@ -109,6 +121,12 @@ function App() {
               onEdit={setEditingTask}
             />
           )}
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </section>
       </main>
     </div>
