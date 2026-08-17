@@ -12,7 +12,7 @@ import useFetch from './hooks/useFetch';
 import useTaskOperations from './hooks/useTaskOperations';
 import { filterTasks, getFilterCounts, getTaskStats } from './utils/helpers';
 
-const BASE_URL = 'https://jsonplaceholder.typicode.com/todos';
+const API_URL = 'https://jsonplaceholder.typicode.com/todos';
 const ITEMS_PER_PAGE = 3;
 
 function normalizeTasks(rawTasks) {
@@ -33,13 +33,13 @@ function App() {
 
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const apiUrl = `${BASE_URL}?_page=${currentPage}&_limit=${ITEMS_PER_PAGE}`;
-  const { data: rawTasks, loading, error, totalCount } = useFetch(apiUrl);
+  // pagination côté client
+  const { data: rawTasks, loading, error } = useFetch(API_URL);
 
   const [tasks, setTasks] = useState([]);
   const [lastRawTasks, setLastRawTasks] = useState(null);
 
-  // normalise les donnees de l'api a chaque changement de page
+  // normalise les donnees de l'api une seule fois, au chargement
   if (rawTasks && rawTasks !== lastRawTasks) {
     setLastRawTasks(rawTasks);
     setTasks(normalizeTasks(rawTasks));
@@ -48,14 +48,24 @@ function App() {
   const { addTask, editTask, removeTask, toggleTask, actionLoading, actionError } =
     useTaskOperations(setTasks);
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
+  // stats et compteurs pour toutes les tâches
+  const stats = useMemo(() => getTaskStats(tasks), [tasks]);
+  const counts = useMemo(() => getFilterCounts(tasks), [tasks]);
 
+  
   const filteredTasks = useMemo(
     () => filterTasks(tasks, filter, debouncedSearch),
     [tasks, filter, debouncedSearch]
   );
-  const stats = useMemo(() => getTaskStats(tasks), [tasks]);
-  const counts = useMemo(() => getFilterCounts(tasks), [tasks]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+
+  // afficghe que les taches qui concernent la page
+  const paginatedTasks = useMemo(() => {
+    const start = (safePage - 1) * ITEMS_PER_PAGE;
+    return filteredTasks.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredTasks, safePage]);
 
   const handleSubmitTask = useCallback(
     async (formData) => {
@@ -70,6 +80,16 @@ function App() {
   );
 
   const handleCancelEdit = useCallback(() => setEditingTask(null), []);
+
+  const handleFilterChange = useCallback((newFilter) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+  }, []);
+
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  }, []);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
@@ -103,8 +123,8 @@ function App() {
 
         <section className="right-column">
           <div className="toolbar">
-            <SearchBar value={searchTerm} onChange={setSearchTerm} />
-            <FilterBar currentFilter={filter} onFilterChange={setFilter} counts={counts} />
+            <SearchBar value={searchTerm} onChange={handleSearchChange} />
+            <FilterBar currentFilter={filter} onFilterChange={handleFilterChange} counts={counts} />
           </div>
 
           <div className="list-header">
@@ -115,7 +135,7 @@ function App() {
             <div className="alert">Chargement en cours...</div>
           ) : (
             <TaskList
-              tasks={filteredTasks}
+              tasks={paginatedTasks}
               onDelete={removeTask}
               onToggle={toggleTask}
               onEdit={setEditingTask}
@@ -123,7 +143,7 @@ function App() {
           )}
 
           <Pagination
-            currentPage={currentPage}
+            currentPage={safePage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
           />
