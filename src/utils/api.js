@@ -18,7 +18,7 @@ export async function fetchTasks() {
       completed: item.completed,
     }));
   } catch (err) {
-    throw new Error('Erreur chargement taches: ' + err.message);
+    throw new Error('Erreur chargement taches: ' + err.message, { cause: err });
   }
 }
 
@@ -27,7 +27,7 @@ export async function fetchTaskById(id) {
     const response = await fetch(`${BASE_URL}/${id}`);
     return await checkResponse(response);
   } catch (err) {
-    throw new Error('Erreur chargement tache: ' + err.message);
+    throw new Error('Erreur chargement tache: ' + err.message, { cause: err });
   }
 }
 
@@ -50,7 +50,7 @@ export async function createTask(taskData) {
       completed: false,
     };
   } catch (err) {
-    throw new Error('Erreur creation tache: ' + err.message);
+    throw new Error('Erreur creation tache: ' + err.message, { cause: err });
   }
 }
 
@@ -64,7 +64,7 @@ export async function updateTask(id, taskData) {
     await checkResponse(response);
     return { id, ...taskData };
   } catch (err) {
-    throw new Error('Erreur modification tache: ' + err.message);
+    throw new Error('Erreur modification tache: ' + err.message, { cause: err });
   }
 }
 
@@ -75,6 +75,6 @@ export async function deleteTask(id) {
     if (!response.ok) throw new Error(`Erreur ${response.status}`);
     return id;
   } catch (err) {
-    throw new Error('Erreur suppression tache: ' + err.message);
+    throw new Error('Erreur suppression tache: ' + err.message, { cause: err });
   }
 }
