@@ -1,122 +1,116 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useCallback, useMemo, useState } from 'react';
+import TaskForm from './components/TaskForm/TaskForm';
+import TaskList from './components/TaskList/TaskList';
+import FilterBar from './components/FilterBar/FilterBar';
+import SearchBar from './components/SearchBar/SearchBar';
+import ThemeToggle from './components/ThemeToggle/ThemeToggle';
+import Stats from './components/Stats/Stats';
+import useDebounce from './hooks/useDebounce';
+import useFetch from './hooks/useFetch';
+import useTaskOperations from './hooks/useTaskOperations';
+import { filterTasks, getFilterCounts, getTaskStats } from './utils/helpers';
 
-function App() {
-  const [count, setCount] = useState(0)
+const API_URL = 'https://jsonplaceholder.typicode.com/todos';
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function normalizeTasks(rawTasks) {
+  return rawTasks.slice(0, 12).map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: '',
+    priority: 'medium',
+    completed: item.completed,
+  }));
 }
 
-export default App
+function App() {
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingTask, setEditingTask] = useState(null);
+
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const { data: rawTasks, loading, error } = useFetch(API_URL);
+  const [tasks, setTasks] = useState([]);
+  const [lastRawTasks, setLastRawTasks] = useState(null);
+
+  // normalise les donnees de l'api
+  if (rawTasks && rawTasks !== lastRawTasks) {
+    setLastRawTasks(rawTasks);
+    setTasks(normalizeTasks(rawTasks));
+  }
+
+  const { addTask, editTask, removeTask, toggleTask, actionLoading, actionError } =
+    useTaskOperations(setTasks);
+
+  const filteredTasks = useMemo(
+    () => filterTasks(tasks, filter, debouncedSearch),
+    [tasks, filter, debouncedSearch]
+  );
+  const stats = useMemo(() => getTaskStats(tasks), [tasks]);
+  const counts = useMemo(() => getFilterCounts(tasks), [tasks]);
+
+  const handleSubmitTask = useCallback(
+    async (formData) => {
+      if (editingTask) {
+        await editTask(editingTask.id, { ...editingTask, ...formData });
+        setEditingTask(null);
+      } else {
+        await addTask({ ...formData, completed: false });
+      }
+    },
+    [editingTask, editTask, addTask]
+  );
+
+  const handleCancelEdit = useCallback(() => setEditingTask(null), []);
+
+  return (
+    <div className="app-shell">
+      <header className="hero">
+        <div>
+          <h1>Taskflow</h1>
+          <p>Organise tes tâches.</p>
+        </div>
+        <ThemeToggle />
+      </header>
+
+      {(error || actionError) && (
+        <div className="alert error">{error || actionError}</div>
+      )}
+
+      <main className="layout">
+        <section className="left-column">
+          <TaskForm
+            key={editingTask ? editingTask.id : 'new'}
+            onSubmit={handleSubmitTask}
+            editingTask={editingTask}
+            onCancelEdit={handleCancelEdit}
+          />
+          <Stats stats={stats} />
+        </section>
+
+        <section className="right-column">
+          <div className="toolbar">
+            <SearchBar value={searchTerm} onChange={setSearchTerm} />
+            <FilterBar currentFilter={filter} onFilterChange={setFilter} counts={counts} />
+          </div>
+
+          <div className="list-header">
+            <h2>Mes tâches</h2>
+          </div>
+
+          {loading || actionLoading ? (
+            <div className="alert">Chargement en cours...</div>
+          ) : (
+            <TaskList
+              tasks={filteredTasks}
+              onDelete={removeTask}
+              onToggle={toggleTask}
+              onEdit={setEditingTask}
+            />
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default App;
