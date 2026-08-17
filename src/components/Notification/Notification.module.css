@@ -1,0 +1,33 @@
+.container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  gap: 0.6rem;
+  z-index: 1000;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  color: white;
+  min-width: 220px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notification button {
+  background: transparent;
+  padding: 0.2rem 0.5rem;
+}
+
+.success {
+  background: #16a34a;
+}
+
+.error {
+  background: #dc2626;
+}

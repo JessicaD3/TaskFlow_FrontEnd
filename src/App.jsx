@@ -5,6 +5,7 @@ import FilterBar from './components/FilterBar/FilterBar';
 import SearchBar from './components/SearchBar/SearchBar';
 import ThemeToggle from './components/ThemeToggle/ThemeToggle';
 import Stats from './components/Stats/Stats';
+import Notification from './components/Notification/Notification';
 import useDebounce from './hooks/useDebounce';
 import useFetch from './hooks/useFetch';
 import useTaskOperations from './hooks/useTaskOperations';
@@ -64,6 +65,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <Notification />
       <header className="hero">
         <div>
           <h1>Taskflow</h1>
