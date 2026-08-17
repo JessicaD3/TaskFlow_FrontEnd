@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 function useFetch(url) {
   const [data, setData] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [reloadIndex, setReloadIndex] = useState(0);
@@ -15,6 +16,11 @@ function useFetch(url) {
         setError(null);
         const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) throw new Error(`Erreur ${response.status}`);
+
+        // renvoi le total de tâche
+        const count = response.headers.get('X-Total-Count');
+        if (count) setTotalCount(Number(count));
+
         const json = await response.json();
         setData(json);
       } catch (err) {
@@ -35,7 +41,7 @@ function useFetch(url) {
     setReloadIndex((i) => i + 1);
   }, []);
 
-  return { data, loading, error, refetch, setData };
+  return { data, loading, error, refetch, setData, totalCount };
 }
 
 export default useFetch;
